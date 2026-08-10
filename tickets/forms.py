@@ -13,3 +13,15 @@ class TicketForm(forms.ModelForm):
             "category",
             "priority",
         ]
+
+
+class TicketUpdateForm(forms.ModelForm):
+    class Meta:
+        model = Ticket
+        fields = [
+            "status",
+            "priority",
+            "assigned_agent",
+            "agent_reply",
+            "resolution",
+        ]

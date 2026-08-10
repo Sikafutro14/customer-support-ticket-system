@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 
 
 class Ticket(models.Model):
+
     CATEGORY_CHOICES = [
         ("technical", "Technical"),
         ("billing", "Billing"),
@@ -57,6 +58,7 @@ class Ticket(models.Model):
     )
 
     resolution = models.TextField(blank=True)
+    agent_reply = models.TextField(blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

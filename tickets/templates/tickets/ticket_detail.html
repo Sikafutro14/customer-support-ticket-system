@@ -1,0 +1,382 @@
+{% extends "tickets/base.html" %}
+
+{% block title %}
+Ticket #{{ ticket.id }} | SupportDesk
+{% endblock %}
+
+{% block extra_css %}
+
+<style>
+
+    .ticket-detail {
+        max-width: 900px;
+        margin: auto;
+    }
+
+    .back-link {
+        display: inline-block;
+        margin-bottom: 20px;
+        text-decoration: none;
+        color: #2563eb;
+        font-weight: 500;
+    }
+
+    .back-link:hover {
+        text-decoration: underline;
+    }
+
+    .ticket-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 25px;
+    }
+
+    .ticket-header h1 {
+        margin-bottom: 6px;
+    }
+
+    .ticket-header p {
+        color: #6b7280;
+    }
+
+    .ticket-card {
+        background: white;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+        margin-bottom: 25px;
+    }
+
+    .ticket-card h2 {
+        margin-bottom: 20px;
+    }
+
+    .meta-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+        margin-top: 20px;
+    }
+
+    .meta-item {
+        background: #f9fafb;
+        padding: 15px;
+        border-radius: 8px;
+    }
+
+    .meta-item strong {
+        display: block;
+        margin-bottom: 6px;
+        color: #374151;
+    }
+
+    .description {
+        margin-top: 25px;
+        line-height: 1.7;
+    }
+
+    .description h3 {
+        margin-bottom: 10px;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 6px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    /* Priority */
+
+    .priority-low {
+        background: #ecfdf5;
+        color: #065f46;
+    }
+
+    .priority-medium {
+        background: #eff6ff;
+        color: #1d4ed8;
+    }
+
+    .priority-high {
+        background: #fff7ed;
+        color: #c2410c;
+    }
+
+    .priority-urgent {
+        background: #fef2f2;
+        color: #b91c1c;
+    }
+
+    /* Status */
+
+    .status-open {
+        background: #eff6ff;
+        color: #1d4ed8;
+    }
+
+    .status-in_progress {
+        background: #fff7ed;
+        color: #c2410c;
+    }
+
+    .status-resolved {
+        background: #ecfdf5;
+        color: #047857;
+    }
+
+    .status-closed {
+        background: #f3f4f6;
+        color: #374151;
+    }
+
+    /* Agent update form */
+
+    .ticket-card form p {
+        margin-bottom: 18px;
+    }
+
+    .ticket-card form label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 6px;
+    }
+
+    .ticket-card form input,
+    .ticket-card form select,
+    .ticket-card form textarea {
+        width: 100%;
+        padding: 11px 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 7px;
+        font-size: 14px;
+        font-family: inherit;
+    }
+
+    .ticket-card form textarea {
+        min-height: 110px;
+        resize: vertical;
+    }
+
+    .agent-reply {
+        background: #f9fafb;
+        padding: 18px;
+        border-radius: 8px;
+        line-height: 1.6;
+    }
+
+    @media (max-width: 650px) {
+
+        .meta-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .ticket-header {
+            flex-direction: column;
+            gap: 12px;
+        }
+
+    }
+
+</style>
+
+{% endblock %}
+
+
+{% block content %}
+
+<div class="ticket-detail">
+
+    <!-- BACK -->
+
+    <a href="/tickets/" class="back-link">
+        ← Back to Dashboard
+    </a>
+
+
+    <!-- HEADER -->
+
+    <div class="ticket-header">
+
+        <div>
+
+            <h1>
+                Ticket #{{ ticket.id }}
+            </h1>
+
+            <p>
+                {{ ticket.subject }}
+            </p>
+
+        </div>
+
+        <span class="badge status-{{ ticket.status }}">
+            {{ ticket.get_status_display }}
+        </span>
+
+    </div>
+
+
+    <!-- CUSTOMER INFORMATION -->
+
+    <div class="ticket-card">
+
+        <h2>Customer Information</h2>
+
+        <div class="meta-grid">
+
+            <div class="meta-item">
+
+                <strong>Name</strong>
+
+                {{ ticket.customer_name }}
+
+            </div>
+
+
+            <div class="meta-item">
+
+                <strong>Email</strong>
+
+                {{ ticket.customer_email }}
+
+            </div>
+
+
+            <div class="meta-item">
+
+                <strong>Category</strong>
+
+                {{ ticket.get_category_display }}
+
+            </div>
+
+
+            <div class="meta-item">
+
+                <strong>Priority</strong>
+
+                <span class="badge priority-{{ ticket.priority }}">
+                    {{ ticket.get_priority_display }}
+                </span>
+
+            </div>
+
+
+            <div class="meta-item">
+
+                <strong>Assigned Agent</strong>
+
+                {% if ticket.assigned_agent %}
+
+                    {{ ticket.assigned_agent.username }}
+
+                {% else %}
+
+                    Not assigned
+
+                {% endif %}
+
+            </div>
+
+
+            <div class="meta-item">
+
+                <strong>Created</strong>
+
+                {{ ticket.created_at|date:"M d, Y H:i" }}
+
+            </div>
+
+        </div>
+
+
+        <div class="description">
+
+            <h3>Customer Request</h3>
+
+            <p>
+                {{ ticket.description }}
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <!-- AGENT REPLY -->
+
+    <div class="ticket-card">
+
+        <h2>Agent Reply</h2>
+
+        {% if ticket.agent_reply %}
+
+            <div class="agent-reply">
+                {{ ticket.agent_reply|linebreaks }}
+            </div>
+
+        {% else %}
+
+            <p style="color:#6b7280;">
+                No agent reply has been added yet.
+            </p>
+
+        {% endif %}
+
+    </div>
+
+
+    <!-- RESOLUTION -->
+
+    <div class="ticket-card">
+
+        <h2>Resolution</h2>
+
+        {% if ticket.resolution %}
+
+            <p>
+                {{ ticket.resolution|linebreaks }}
+            </p>
+
+        {% else %}
+
+            <p style="color:#6b7280;">
+                This ticket has not been resolved yet.
+            </p>
+
+        {% endif %}
+
+    </div>
+
+
+    <!-- AGENT UPDATE FORM -->
+
+    <div class="ticket-card">
+
+        <h2>Update Ticket</h2>
+
+        <p style="color:#6b7280; margin-bottom:20px;">
+            Update the ticket status, priority, assigned agent,
+            response or resolution.
+        </p>
+
+        <form method="POST">
+
+            {% csrf_token %}
+
+            {{ form.as_p }}
+
+            <button type="submit" class="btn">
+                Save Update
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+{% endblock %}
