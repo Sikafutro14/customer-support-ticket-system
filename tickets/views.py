@@ -1,8 +1,19 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import user_passes_test
 
 from .forms import TicketForm, TicketUpdateForm
 from .models import Ticket
+
+
+def is_support_agent(user):
+    return user.is_authenticated and user.is_staff
+
+
+def access_denied(request):
+    return render(
+        request,
+        "tickets/access_denied.html"
+    )
 
 
 def ticket_create(request):
@@ -30,7 +41,10 @@ def ticket_success(request):
     )
 
 
-@login_required
+@user_passes_test(
+    is_support_agent,
+    login_url="/access-denied/"
+)
 def ticket_list(request):
     tickets = Ticket.objects.all().order_by("-created_at")
 
@@ -47,15 +61,21 @@ def ticket_list(request):
 
     # Search by subject
     if search:
-        tickets = tickets.filter(subject__icontains=search)
+        tickets = tickets.filter(
+            subject__icontains=search
+        )
 
     # Filter by status
     if status:
-        tickets = tickets.filter(status=status)
+        tickets = tickets.filter(
+            status=status
+        )
 
     # Filter by priority
     if priority:
-        tickets = tickets.filter(priority=priority)
+        tickets = tickets.filter(
+            priority=priority
+        )
 
     context = {
         "tickets": tickets,
@@ -75,19 +95,34 @@ def ticket_list(request):
     )
 
 
-@login_required
+@user_passes_test(
+    is_support_agent,
+    login_url="/access-denied/"
+)
 def ticket_detail(request, ticket_id):
-    ticket = get_object_or_404(Ticket, id=ticket_id)
+    ticket = get_object_or_404(
+        Ticket,
+        id=ticket_id
+    )
 
     if request.method == "POST":
-        form = TicketUpdateForm(request.POST, instance=ticket)
+        form = TicketUpdateForm(
+            request.POST,
+            instance=ticket
+        )
 
         if form.is_valid():
             form.save()
-            return redirect("ticket_detail", ticket_id=ticket.id)
+
+            return redirect(
+                "ticket_detail",
+                ticket_id=ticket.id
+            )
 
     else:
-        form = TicketUpdateForm(instance=ticket)
+        form = TicketUpdateForm(
+            instance=ticket
+        )
 
     return render(
         request,

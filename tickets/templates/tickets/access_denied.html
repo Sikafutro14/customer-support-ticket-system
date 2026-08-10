@@ -1,0 +1,31 @@
+{% extends "tickets/base.html" %}
+
+{% block title %}
+Access Denied | SupportDesk
+{% endblock %}
+
+{% block content %}
+
+<div class="ticket-card"
+     style="max-width: 600px; margin: 60px auto; text-align: center;">
+
+    <h1 style="margin-bottom: 15px;">
+        🔒 Access Denied
+    </h1>
+
+    <p style="color: #6b7280; margin-bottom: 10px;">
+        You are signed in, but you do not have permission
+        to access the Support Dashboard.
+    </p>
+
+    <p style="color: #6b7280; margin-bottom: 25px;">
+        This area is restricted to authorized support staff.
+    </p>
+
+    <a href="/" class="btn">
+        Return to SupportDesk
+    </a>
+
+</div>
+
+{% endblock %}
