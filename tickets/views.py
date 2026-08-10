@@ -1,4 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+
 from .forms import TicketForm, TicketUpdateForm
 from .models import Ticket
 
@@ -28,6 +30,7 @@ def ticket_success(request):
     )
 
 
+@login_required
 def ticket_list(request):
     tickets = Ticket.objects.all().order_by("-created_at")
 
@@ -72,6 +75,7 @@ def ticket_list(request):
     )
 
 
+@login_required
 def ticket_detail(request, ticket_id):
     ticket = get_object_or_404(Ticket, id=ticket_id)
 

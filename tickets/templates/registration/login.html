@@ -1,0 +1,29 @@
+{% extends "tickets/base.html" %}
+
+{% block title %}
+Agent Login | SupportDesk
+{% endblock %}
+
+{% block content %}
+
+<div class="ticket-card" style="max-width: 500px; margin: 40px auto;">
+
+    <h1>Agent Login</h1>
+
+    <p style="color: #6b7280; margin-bottom: 20px;">
+        Sign in to access the support dashboard.
+    </p>
+
+    <form method="POST">
+        {% csrf_token %}
+
+        {{ form.as_p }}
+
+        <button type="submit" class="btn">
+            Login
+        </button>
+    </form>
+
+</div>
+
+{% endblock %}

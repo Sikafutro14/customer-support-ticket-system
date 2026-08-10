@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -19,6 +20,7 @@
             color: #1f2937;
         }
 
+        /* NAVIGATION */
         nav {
             background: #111827;
             color: white;
@@ -33,6 +35,11 @@
             font-weight: bold;
         }
 
+        .nav-links {
+            display: flex;
+            align-items: center;
+        }
+
         nav a {
             color: #d1d5db;
             text-decoration: none;
@@ -43,12 +50,32 @@
             color: white;
         }
 
+        /* LOGOUT BUTTON */
+        .logout-form {
+            display: inline;
+        }
+
+        .logout-btn {
+            background: none;
+            border: none;
+            color: #d1d5db;
+            margin-left: 25px;
+            cursor: pointer;
+            font: inherit;
+        }
+
+        .logout-btn:hover {
+            color: white;
+        }
+
+        /* PAGE CONTAINER */
         .container {
             width: 90%;
             max-width: 1200px;
             margin: 40px auto;
         }
 
+        /* BUTTONS */
         .btn {
             display: inline-block;
             background: #2563eb;
@@ -67,30 +94,60 @@
 
     {% block extra_css %}
     {% endblock %}
+
 </head>
 
 <body>
 
-<nav>
+    <!-- NAVIGATION -->
+    <nav>
 
-    <div class="logo">
-        🎧 SupportDesk
-    </div>
+        <div class="logo">
+            🎧 SupportDesk
+        </div>
 
-    <div>
-        <a href="/">Submit Ticket</a>
-        <a href="/tickets/">Dashboard</a>
-        <a href="/admin/">Admin</a>
-    </div>
+        <div class="nav-links">
 
-</nav>
+            <a href="/">Submit Ticket</a>
 
-<main class="container">
+            {% if user.is_authenticated %}
 
-    {% block content %}
-    {% endblock %}
+                <a href="/tickets/">Dashboard</a>
+                <a href="/admin/">Admin</a>
 
-</main>
+                <form method="POST"
+                      action="{% url 'logout' %}"
+                      class="logout-form">
+
+                    {% csrf_token %}
+
+                    <button type="submit" class="logout-btn">
+                        Logout
+                    </button>
+
+                </form>
+
+            {% else %}
+
+                <a href="{% url 'login' %}">
+                    Agent Login
+                </a>
+
+            {% endif %}
+
+        </div>
+
+    </nav>
+
+
+    <!-- MAIN PAGE CONTENT -->
+    <main class="container">
+
+        {% block content %}
+        {% endblock %}
+
+    </main>
 
 </body>
+
 </html>
