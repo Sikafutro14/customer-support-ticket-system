@@ -1,8 +1,26 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import user_passes_test
 
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.response import Response
+from rest_framework.permissions import IsAdminUser
+
 from .forms import TicketForm, TicketUpdateForm
 from .models import Ticket
+from .serializers import TicketSerializer
+
+
+@api_view(["GET"])
+@permission_classes([IsAdminUser])
+def api_ticket_list(request):
+    tickets = Ticket.objects.all().order_by("-created_at")
+
+    serializer = TicketSerializer(
+        tickets,
+        many=True
+    )
+
+    return Response(serializer.data)
 
 
 def is_support_agent(user):
