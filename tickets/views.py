@@ -142,7 +142,7 @@ def ticket_detail(request, ticket_id):
 @api_view(["GET", "POST"])
 def api_ticket_list(request):
 
-    # STAFF ONLY: View all tickets
+    # STAFF ONLY: View, search and filter tickets
     if request.method == "GET":
         if not request.user.is_authenticated or not request.user.is_staff:
             return Response(
@@ -154,6 +154,25 @@ def api_ticket_list(request):
             )
 
         tickets = Ticket.objects.all().order_by("-created_at")
+
+        search = request.GET.get("search", "")
+        status = request.GET.get("status", "")
+        priority = request.GET.get("priority", "")
+
+        if search:
+            tickets = tickets.filter(
+                subject__icontains=search
+            )
+
+        if status:
+            tickets = tickets.filter(
+                status=status
+            )
+
+        if priority:
+            tickets = tickets.filter(
+                priority=priority
+            )
 
         serializer = TicketSerializer(
             tickets,
