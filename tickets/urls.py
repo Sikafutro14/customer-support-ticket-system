@@ -15,4 +15,10 @@ urlpatterns = [
     ),
 
     path("api/tickets/", views.api_ticket_list, name="api_ticket_list"),
+
+    path(
+    "api/tickets/<int:ticket_id>/",
+    views.api_ticket_detail,
+    name="api_ticket_detail"
+),
 ]

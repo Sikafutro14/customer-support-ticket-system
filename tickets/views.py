@@ -150,3 +150,28 @@ def ticket_detail(request, ticket_id):
             "form": form,
         }
     )
+
+    @api_view(["GET"])
+    @permission_classes([IsAdminUser])
+    def api_ticket_list(request):
+      tickets = Ticket.objects.all().order_by("-created_at")
+
+    serializer = TicketSerializer(
+        tickets,
+        many=True
+    )
+
+    return Response(serializer.data)
+
+
+@api_view(["GET"])
+@permission_classes([IsAdminUser])
+def api_ticket_detail(request, ticket_id):
+    ticket = get_object_or_404(
+        Ticket,
+        id=ticket_id
+    )
+
+    serializer = TicketSerializer(ticket)
+
+    return Response(serializer.data)
