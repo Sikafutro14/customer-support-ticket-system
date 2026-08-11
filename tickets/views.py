@@ -10,19 +10,6 @@ from .models import Ticket
 from .serializers import TicketSerializer
 
 
-@api_view(["GET"])
-@permission_classes([IsAdminUser])
-def api_ticket_list(request):
-    tickets = Ticket.objects.all().order_by("-created_at")
-
-    serializer = TicketSerializer(
-        tickets,
-        many=True
-    )
-
-    return Response(serializer.data)
-
-
 def is_support_agent(user):
     return user.is_authenticated and user.is_staff
 
@@ -151,17 +138,48 @@ def ticket_detail(request, ticket_id):
         }
     )
 
-    @api_view(["GET"])
-    @permission_classes([IsAdminUser])
-    def api_ticket_list(request):
-      tickets = Ticket.objects.all().order_by("-created_at")
 
-    serializer = TicketSerializer(
-        tickets,
-        many=True
-    )
+@api_view(["GET", "POST"])
+def api_ticket_list(request):
 
-    return Response(serializer.data)
+    # STAFF ONLY: View all tickets
+    if request.method == "GET":
+        if not request.user.is_authenticated or not request.user.is_staff:
+            return Response(
+                {
+                    "detail":
+                    "You do not have permission to view tickets."
+                },
+                status=403
+            )
+
+        tickets = Ticket.objects.all().order_by("-created_at")
+
+        serializer = TicketSerializer(
+            tickets,
+            many=True
+        )
+
+        return Response(serializer.data)
+
+    # PUBLIC: Create a new ticket through the API
+    if request.method == "POST":
+        serializer = TicketSerializer(
+            data=request.data
+        )
+
+        if serializer.is_valid():
+            serializer.save()
+
+            return Response(
+                serializer.data,
+                status=201
+            )
+
+        return Response(
+            serializer.errors,
+            status=400
+        )
 
 
 @api_view(["GET", "PATCH"])
@@ -172,10 +190,13 @@ def api_ticket_detail(request, ticket_id):
         id=ticket_id
     )
 
+    # STAFF ONLY: View one ticket
     if request.method == "GET":
         serializer = TicketSerializer(ticket)
+
         return Response(serializer.data)
 
+    # STAFF ONLY: Update selected ticket fields
     if request.method == "PATCH":
         serializer = TicketSerializer(
             ticket,
@@ -185,6 +206,7 @@ def api_ticket_detail(request, ticket_id):
 
         if serializer.is_valid():
             serializer.save()
+
             return Response(serializer.data)
 
         return Response(
