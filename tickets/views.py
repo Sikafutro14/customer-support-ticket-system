@@ -164,7 +164,7 @@ def ticket_detail(request, ticket_id):
     return Response(serializer.data)
 
 
-@api_view(["GET"])
+@api_view(["GET", "PATCH"])
 @permission_classes([IsAdminUser])
 def api_ticket_detail(request, ticket_id):
     ticket = get_object_or_404(
@@ -172,6 +172,22 @@ def api_ticket_detail(request, ticket_id):
         id=ticket_id
     )
 
-    serializer = TicketSerializer(ticket)
+    if request.method == "GET":
+        serializer = TicketSerializer(ticket)
+        return Response(serializer.data)
 
-    return Response(serializer.data)
+    if request.method == "PATCH":
+        serializer = TicketSerializer(
+            ticket,
+            data=request.data,
+            partial=True
+        )
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+
+        return Response(
+            serializer.errors,
+            status=400
+        )
