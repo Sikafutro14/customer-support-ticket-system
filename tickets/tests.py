@@ -148,12 +148,12 @@ class TicketAPITests(APITestCase):
         )
 
         self.assertEqual(
-            len(response.data),
+            len(response.data["results"]),
             1
         )
 
         self.assertEqual(
-            response.data[0]["subject"],
+            response.data["results"][0]["subject"],
             "Internet problem"
         )
 
@@ -183,12 +183,12 @@ class TicketAPITests(APITestCase):
         )
 
         self.assertEqual(
-            len(response.data),
+            len(response.data["results"]),
             1
         )
 
         self.assertEqual(
-            response.data[0]["status"],
+            response.data["results"][0]["status"],
             "resolved"
         )
 
@@ -208,11 +208,11 @@ class TicketAPITests(APITestCase):
         )
 
         self.assertEqual(
-            len(response.data),
+            len(response.data["results"]),
             1
         )
 
         self.assertEqual(
-            response.data[0]["priority"],
+            response.data["results"][0]["priority"],
             "urgent"
         )

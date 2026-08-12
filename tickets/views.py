@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import user_passes_test
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import IsAdminUser
+from rest_framework.pagination import PageNumberPagination
 
 from .forms import TicketForm, TicketUpdateForm
 from .models import Ticket
@@ -53,30 +54,25 @@ def ticket_success(request):
 def ticket_list(request):
     tickets = Ticket.objects.all().order_by("-created_at")
 
-    # Dashboard statistics
     total_tickets = tickets.count()
     open_tickets = tickets.filter(status="open").count()
     in_progress_tickets = tickets.filter(status="in_progress").count()
     resolved_tickets = tickets.filter(status="resolved").count()
 
-    # Search and filter values
     search = request.GET.get("search", "")
     status = request.GET.get("status", "")
     priority = request.GET.get("priority", "")
 
-    # Search by subject
     if search:
         tickets = tickets.filter(
             subject__icontains=search
         )
 
-    # Filter by status
     if status:
         tickets = tickets.filter(
             status=status
         )
 
-    # Filter by priority
     if priority:
         tickets = tickets.filter(
             priority=priority
@@ -142,8 +138,9 @@ def ticket_detail(request, ticket_id):
 @api_view(["GET", "POST"])
 def api_ticket_list(request):
 
-    # STAFF ONLY: View, search and filter tickets
+    # STAFF ONLY: View, search, filter and paginate tickets
     if request.method == "GET":
+
         if not request.user.is_authenticated or not request.user.is_staff:
             return Response(
                 {
@@ -174,15 +171,26 @@ def api_ticket_list(request):
                 priority=priority
             )
 
-        serializer = TicketSerializer(
+        paginator = PageNumberPagination()
+        paginator.page_size = 10
+
+        page = paginator.paginate_queryset(
             tickets,
+            request
+        )
+
+        serializer = TicketSerializer(
+            page,
             many=True
         )
 
-        return Response(serializer.data)
+        return paginator.get_paginated_response(
+            serializer.data
+        )
 
     # PUBLIC: Create a new ticket through the API
     if request.method == "POST":
+
         serializer = TicketSerializer(
             data=request.data
         )
@@ -217,6 +225,7 @@ def api_ticket_detail(request, ticket_id):
 
     # STAFF ONLY: Update selected ticket fields
     if request.method == "PATCH":
+
         serializer = TicketSerializer(
             ticket,
             data=request.data,
