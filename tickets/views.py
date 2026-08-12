@@ -11,9 +11,17 @@ from .models import Ticket
 from .serializers import TicketSerializer
 
 
+# =========================================================
+# SUPPORT AGENT PERMISSION CHECK
+# =========================================================
+
 def is_support_agent(user):
     return user.is_authenticated and user.is_staff
 
+
+# =========================================================
+# ACCESS DENIED PAGE
+# =========================================================
 
 def access_denied(request):
     return render(
@@ -21,6 +29,10 @@ def access_denied(request):
         "tickets/access_denied.html"
     )
 
+
+# =========================================================
+# CUSTOMER TICKET CREATION
+# =========================================================
 
 def ticket_create(request):
     if request.method == "POST":
@@ -40,12 +52,20 @@ def ticket_create(request):
     )
 
 
+# =========================================================
+# TICKET SUCCESS PAGE
+# =========================================================
+
 def ticket_success(request):
     return render(
         request,
         "tickets/ticket_success.html"
     )
 
+
+# =========================================================
+# STAFF DASHBOARD
+# =========================================================
 
 @user_passes_test(
     is_support_agent,
@@ -54,25 +74,34 @@ def ticket_success(request):
 def ticket_list(request):
     tickets = Ticket.objects.all().order_by("-created_at")
 
+    # Dashboard statistics
     total_tickets = tickets.count()
     open_tickets = tickets.filter(status="open").count()
-    in_progress_tickets = tickets.filter(status="in_progress").count()
-    resolved_tickets = tickets.filter(status="resolved").count()
+    in_progress_tickets = tickets.filter(
+        status="in_progress"
+    ).count()
+    resolved_tickets = tickets.filter(
+        status="resolved"
+    ).count()
 
+    # Search and filter values
     search = request.GET.get("search", "")
     status = request.GET.get("status", "")
     priority = request.GET.get("priority", "")
 
+    # Search by subject
     if search:
         tickets = tickets.filter(
             subject__icontains=search
         )
 
+    # Filter by status
     if status:
         tickets = tickets.filter(
             status=status
         )
 
+    # Filter by priority
     if priority:
         tickets = tickets.filter(
             priority=priority
@@ -95,6 +124,10 @@ def ticket_list(request):
         context
     )
 
+
+# =========================================================
+# STAFF TICKET DETAIL / UPDATE
+# =========================================================
 
 @user_passes_test(
     is_support_agent,
@@ -135,13 +168,24 @@ def ticket_detail(request, ticket_id):
     )
 
 
+# =========================================================
+# API: LIST / SEARCH / FILTER / CREATE
+# =========================================================
+
 @api_view(["GET", "POST"])
 def api_ticket_list(request):
 
-    # STAFF ONLY: View, search, filter and paginate tickets
+    # -----------------------------------------------------
+    # GET
+    # Staff only
+    # -----------------------------------------------------
+
     if request.method == "GET":
 
-        if not request.user.is_authenticated or not request.user.is_staff:
+        if (
+            not request.user.is_authenticated
+            or not request.user.is_staff
+        ):
             return Response(
                 {
                     "detail":
@@ -150,8 +194,11 @@ def api_ticket_list(request):
                 status=403
             )
 
-        tickets = Ticket.objects.all().order_by("-created_at")
+        tickets = Ticket.objects.all().order_by(
+            "-created_at"
+        )
 
+        # Search and filters
         search = request.GET.get("search", "")
         status = request.GET.get("status", "")
         priority = request.GET.get("priority", "")
@@ -171,6 +218,7 @@ def api_ticket_list(request):
                 priority=priority
             )
 
+        # Pagination
         paginator = PageNumberPagination()
         paginator.page_size = 10
 
@@ -188,11 +236,24 @@ def api_ticket_list(request):
             serializer.data
         )
 
-    # PUBLIC: Create a new ticket through the API
+    # -----------------------------------------------------
+    # POST
+    # Public users can create tickets
+    # -----------------------------------------------------
+
     if request.method == "POST":
 
+        public_data = request.data.copy()
+
+        # Customers must NOT control these internal fields.
+        # These fields belong to support staff.
+        public_data.pop("status", None)
+        public_data.pop("assigned_agent", None)
+        public_data.pop("agent_reply", None)
+        public_data.pop("resolution", None)
+
         serializer = TicketSerializer(
-            data=request.data
+            data=public_data
         )
 
         if serializer.is_valid():
@@ -209,21 +270,39 @@ def api_ticket_list(request):
         )
 
 
+# =========================================================
+# API: SINGLE TICKET / UPDATE
+# =========================================================
+
 @api_view(["GET", "PATCH"])
 @permission_classes([IsAdminUser])
 def api_ticket_detail(request, ticket_id):
+
     ticket = get_object_or_404(
         Ticket,
         id=ticket_id
     )
 
-    # STAFF ONLY: View one ticket
+    # -----------------------------------------------------
+    # GET
+    # Staff only
+    # -----------------------------------------------------
+
     if request.method == "GET":
-        serializer = TicketSerializer(ticket)
 
-        return Response(serializer.data)
+        serializer = TicketSerializer(
+            ticket
+        )
 
-    # STAFF ONLY: Update selected ticket fields
+        return Response(
+            serializer.data
+        )
+
+    # -----------------------------------------------------
+    # PATCH
+    # Staff only
+    # -----------------------------------------------------
+
     if request.method == "PATCH":
 
         serializer = TicketSerializer(
@@ -235,7 +314,9 @@ def api_ticket_detail(request, ticket_id):
         if serializer.is_valid():
             serializer.save()
 
-            return Response(serializer.data)
+            return Response(
+                serializer.data
+            )
 
         return Response(
             serializer.errors,

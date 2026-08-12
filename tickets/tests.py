@@ -216,3 +216,54 @@ class TicketAPITests(APITestCase):
             response.data["results"][0]["priority"],
             "urgent"
         )
+    def test_public_user_cannot_set_staff_fields(self):
+        data = {
+            "customer_name": "Security Test Customer",
+            "customer_email": "security@example.com",
+            "subject": "Security test ticket",
+            "description": "Testing protected staff fields.",
+            "category": "technical",
+            "priority": "medium",
+
+            # A malicious/public user tries to manipulate these
+            "status": "resolved",
+            "assigned_agent": self.staff_user.id,
+            "agent_reply": "Fake agent reply",
+            "resolution": "Fake resolution",
+        }
+
+        response = self.client.post(
+            self.list_url,
+            data,
+            format="json"
+        )
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_201_CREATED
+        )
+
+        created_ticket = Ticket.objects.get(
+            customer_email="security@example.com"
+        )
+
+        # Status should remain the model's normal default
+        self.assertEqual(
+            created_ticket.status,
+            "open"
+        )
+
+        # Public user must not be able to assign an agent
+        self.assertIsNone(
+            created_ticket.assigned_agent
+        )
+
+        # Public user must not be able to create an agent reply
+        self.assertFalse(
+            created_ticket.agent_reply
+        )
+
+        # Public user must not be able to create a resolution
+        self.assertFalse(
+            created_ticket.resolution
+        )
